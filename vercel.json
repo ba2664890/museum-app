@@ -1,0 +1,17 @@
+{
+  "functions": {
+    "backend/api/*.py": {
+      "runtime": "python3.11"
+    }
+  },
+  "routes": [
+    { "src": "/(.*)", "dest": "/backend/api/index.py" }
+  ],
+  "buildCommand": "cd backend && python manage.py collectstatic --noinput",
+  "env": {
+    "DEBUG": "False",
+    "SECRET_KEY": "<généré>",
+    "ALLOWED_HOSTS": "*.vercel.app",
+    "DATABASE_URL": "postgresql://<user>:<password>@<host>:5432/<db>"
+  }
+}
