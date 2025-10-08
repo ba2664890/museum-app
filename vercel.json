@@ -3,7 +3,7 @@
   "outputDirectory": "frontend/dist",
   "functions": {
     "api/*.py": {
-      "runtime": "python3.11"
+      "runtime": "vercel-python@3.11"
     }
   },
   "routes": [
@@ -11,8 +11,8 @@
   ],
   "env": {
     "DEBUG": "False",
-    "SECRET_KEY": "<généré>",
+    "SECRET_KEY": "ta_clef_secrete_ici",
     "ALLOWED_HOSTS": "*.vercel.app",
-    "DATABASE_URL": "<copiée depuis Vercel Postgres>"
+    "DATABASE_URL": "ta_url_postgres_vercel"
   }
 }
