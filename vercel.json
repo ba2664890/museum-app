@@ -1,18 +1,4 @@
 {
   "buildCommand": "cd frontend && npm run build",
-  "outputDirectory": "frontend/dist",
-  "functions": {
-    "api/*.py": {
-      "runtime": "vercel-python@3.11"
-    }
-  },
-  "routes": [
-    { "src": "/(.*)", "dest": "/api/index.py" }
-  ],
-  "env": {
-    "DEBUG": "False",
-    "SECRET_KEY": "<généré>",
-    "ALLOWED_HOSTS": "*.vercel.app",
-    "DATABASE_URL": "<copiée depuis Vercel Postgres>"
-  }
+  "outputDirectory": "frontend/dist"
 }
