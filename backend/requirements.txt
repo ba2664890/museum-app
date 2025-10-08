@@ -1,0 +1,17 @@
+Django==4.2.7
+djangorestframework==3.14.0
+django-cors-headers==4.3.1
+Pillow==10.0.1
+psycopg2-binary==2.9.9
+python-decouple==3.8
+django-modeltranslation==0.18.11
+PyQRCode==1.2.1
+pypng==0.20220715.0
+python-magic==0.4.27
+django-filter==23.3
+markdown==3.5.1
+django-extensions==3.2.3
+gunicorn==21.2.0
+whitenoise==6.6.0
+django-jazzmin>=2.6.0
+qrcode[pil]>=7.4

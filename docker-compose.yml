@@ -1,0 +1,69 @@
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15
+    environment:
+      POSTGRES_DB: mcn
+      POSTGRES_USER: Cardan
+      POSTGRES_PASSWORD: Fatimata05?
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+    ports:
+      - "5433:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U museum_user -d museum_db"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend:/app
+      - media_files:/app/media
+    environment:
+      - DEBUG=True
+      - DB_NAME=mcn
+      - DB_USER=Cardan
+      - DB_PASSWORD=Fatimata05?
+      - DB_HOST=db
+      - DB_PORT=5432
+      - SECRET_KEY=django-insecure-demo-key-change-in-production
+    depends_on:
+      db:
+        condition: service_healthy
+    command: >
+      sh -c "python manage.py migrate &&
+             python manage.py collectstatic --noinput &&
+             python manage.py runserver 0.0.0.0:8000"
+
+  frontend:
+    build: ./frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend:/app
+      - /app/node_modules
+    environment:
+      - VITE_API_URL=http://localhost:8000/api
+    depends_on:
+      - backend
+    command: npm run dev
+
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+    volumes:
+      - ./nginx.conf:/etc/nginx/nginx.conf:ro
+      - media_files:/app/media:ro
+    depends_on:
+      - backend
+      - frontend
+
+volumes:
+  postgres_data:
+  media_files:
