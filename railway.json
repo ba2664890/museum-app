@@ -1,0 +1,34 @@
+{
+  "project": "museum-app",
+  "services": [
+    {
+      "name": "db",
+      "source": {
+        "image": "postgres:15",
+        "env": {
+          "POSTGRES_DB": "mcn",
+          "POSTGRES_USER": "postgres",
+          "POSTGRES_PASSWORD": "${POSTGRES_PASSWORD}"
+        }
+      }
+    },
+    {
+      "name": "backend",
+      "source": {
+        "dockerfile": "./backend/Dockerfile.prod",
+        "env": {
+          "DEBUG": "False",
+          "SECRET_KEY": "${SECRET_KEY}",
+          "ALLOWED_HOSTS": "*.up.railway.app",
+          "DATABASE_URL": "${DATABASE_URL}"
+        }
+      }
+    },
+    {
+      "name": "frontend",
+      "source": {
+        "dockerfile": "./frontend/Dockerfile.prod"
+      }
+    }
+  ]
+}
