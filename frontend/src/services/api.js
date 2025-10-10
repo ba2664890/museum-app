@@ -1,21 +1,10 @@
 import axios from 'axios'
 
-// --- CSRF helper ---
-function getCookie(name) {
-  let cookieValue = null
-  if (document.cookie) {
-    document.cookie.split(';').forEach(c => {
-      const [k, v] = c.trim().split('=')
-      if (k === name) cookieValue = decodeURIComponent(v)
-    })
-  }
-  return cookieValue
-}
-
-const csrftoken = getCookie('csrftoken')
+// --- CSRF token déjà récupéré ---
+const csrftoken = "CWaH5U2p6DBNPgFtVQJhvRYpbKBanoLO3ld3gWg4KkVEOR1PTdPpv8m9kFldYTug"
 
 // --- Axios instance ---
-const API_BASE_URL = import.meta.env.VITE_API_URL || '/api'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://museum-api-production.up.railway.app/api'
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -23,7 +12,7 @@ const api = axios.create({
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // ✅ envoie les cookies (sessions / CSRF)
+  withCredentials: true, // envoie les cookies
 })
 
 // --- Request interceptor ---
@@ -37,6 +26,11 @@ api.interceptors.request.use(
     const language = localStorage.getItem('language')
     if (language) {
       config.headers['Accept-Language'] = language
+    }
+
+    // Ajouter slash final pour éviter 404 Django
+    if (config.url && !config.url.endsWith('/')) {
+      config.url += '/'
     }
 
     return config
