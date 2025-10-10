@@ -1,7 +1,18 @@
 import axios from 'axios'
 
-// --- CSRF token déjà récupéré ---
-const csrftoken = "CWaH5U2p6DBNPgFtVQJhvRYpbKBanoLO3ld3gWg4KkVEOR1PTdPpv8m9kFldYTug"
+function getCookie(name) {
+  let cookieValue = null
+  if (document.cookie) {
+    document.cookie.split(';').forEach(c => {
+      const [k, v] = c.trim().split('=')
+      if (k === name) cookieValue = decodeURIComponent(v)
+    })
+  }
+  return cookieValue
+}
+
+const csrftoken = getCookie('csrftoken')
+
 
 // --- Axios instance ---
 const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://museum-api-production.up.railway.app/api'
