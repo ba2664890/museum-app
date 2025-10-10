@@ -18,6 +18,7 @@ const api = axios.create({
 async function ensureCSRFToken() {
   try {
     await api.get('/csrf/')
+    console.log("c'est bon")
   } catch (error) {
     console.error('Erreur lors de la récupération du CSRF token:', error)
   }
