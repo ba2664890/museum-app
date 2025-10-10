@@ -1,85 +1,61 @@
 import axios from 'axios'
 
-// 🌍 Base URL dynamique (selon environnement)
-const API_BASE_URL =
-  import.meta.env.VITE_API_URL || 'https://backendmcn-production.up.railway.app/api'
+const API_BASE_URL = import.meta.env.VITE_API_URL || 'https://backendmcn-production.up.railway.app/api'
 
-// 🧱 Création d'une instance Axios
+// Créer une instance Axios
 const api = axios.create({
   baseURL: API_BASE_URL,
   timeout: 10000,
   headers: {
     'Content-Type': 'application/json',
   },
-  withCredentials: true, // 🔐 important pour CSRF + cookies
+  withCredentials: true, // Important pour envoyer les cookies CSRF
 })
 
-// 🧩 Récupération du CSRF token depuis le backend
-async function ensureCSRFToken() {
+// Stocker le CSRF token
+let csrfToken = null
+
+// Fonction pour récupérer le CSRF token depuis Django
+export const fetchCsrfToken = async () => {
   try {
-    await api.get('/csrf/')
-    console.log("c'est bon")
+    const response = await axios.get(`${API_BASE_URL}/csrf/`, { withCredentials: true })
+    csrfToken = response.data.csrfToken
+    return csrfToken
   } catch (error) {
-    console.error('Erreur lors de la récupération du CSRF token:', error)
+    console.error('Failed to fetch CSRF token', error)
+    throw error
   }
 }
 
-// 🚦 Intercepteur des requêtes
-api.interceptors.request.use(
-  async (config) => {
-    // 🔤 Ajoute la langue si elle existe
-    const language = localStorage.getItem('language')
-    if (language) {
-      config.headers['Accept-Language'] = language
-    }
+// Intercepteur pour ajouter le CSRF token aux requêtes
+api.interceptors.request.use((config) => {
+  if (csrfToken) {
+    config.headers['X-CSRFToken'] = csrfToken
+  }
+  const language = localStorage.getItem('language')
+  if (language) {
+    config.headers['Accept-Language'] = language
+  }
+  return config
+}, (error) => Promise.reject(error))
 
-    // 🔐 Vérifie la présence du CSRF token avant les requêtes POST/PUT/DELETE
-    if (['post', 'put', 'patch', 'delete'].includes(config.method)) {
-      const csrfToken = getCSRFCookie('csrftoken')
-      if (!csrfToken) {
-        await ensureCSRFToken()
-      }
-      config.headers['X-CSRFToken'] = getCSRFCookie('csrftoken')
-    }
-
-    return config
-  },
-  (error) => Promise.reject(error)
-)
-
-// 🚨 Intercepteur des réponses
+// Intercepteur de réponse pour gérer erreurs
 api.interceptors.response.use(
   (response) => response,
   (error) => {
     console.error('API Error:', error)
-
-    if (error.response?.status === 404) {
-      throw new Error('⛔ Ressource non trouvée')
-    } else if (error.response?.status === 500) {
-      throw new Error('💥 Erreur serveur')
-    } else if (error.code === 'ECONNABORTED') {
-      throw new Error('⏳ Délai d’attente dépassé')
-    } else if (error.response?.status === 403) {
-      console.warn('🚫 Accès refusé — peut-être un problème CSRF')
-    }
-
+    if (error.response?.status === 404) throw new Error('Resource not found')
+    if (error.response?.status === 500) throw new Error('Server error')
+    if (error.code === 'ECONNABORTED') throw new Error('Request timeout')
     throw error
   }
 )
 
-// 🍪 Fonction pour lire un cookie CSRF
-function getCSRFCookie(name) {
-  const cookieValue = document.cookie
-    .split('; ')
-    .find((row) => row.startsWith(name + '='))
-  return cookieValue ? decodeURIComponent(cookieValue.split('=')[1]) : null
-}
-
-// =========================
-// 🏛️ API du musée
-// =========================
 export const museumApi = {
-  // --- Artifacts ---
+  // CSRF
+  fetchCsrfToken,
+
+  // Artifacts
   async getArtifacts(params = {}) {
     const response = await api.get('/artifacts/', { params })
     return response.data
@@ -101,7 +77,7 @@ export const museumApi = {
     return response.data
   },
 
-  // --- Collections ---
+  // Collections
   async getCollections() {
     const response = await api.get('/collections/')
     return response.data
@@ -112,7 +88,7 @@ export const museumApi = {
     return response.data
   },
 
-  // --- Periods & Cultures ---
+  // Periods and Cultures
   async getPeriods() {
     const response = await api.get('/periods/')
     return response.data
@@ -123,40 +99,33 @@ export const museumApi = {
     return response.data
   },
 
-  // --- Médias ---
+  // Media
   async getAudioGuides(artifactId) {
-    const response = await api.get('/audio-guides/', {
-      params: { artifact: artifactId },
-    })
+    const response = await api.get('/audio-guides/', { params: { artifact: artifactId } })
     return response.data
   },
 
   async getVideos(artifactId) {
-    const response = await api.get('/videos/', {
-      params: { artifact: artifactId },
-    })
+    const response = await api.get('/videos/', { params: { artifact: artifactId } })
     return response.data
   },
 
-  // --- QR Scanner ---
+  // QR Scanner
   async scanQRCode(qrData) {
     const response = await api.post('/qr-scan/', { qr_data: qrData })
     return response.data
   },
 
-  // --- Suivi des visites ---
+  // Visit tracking
   async trackVisit(artifactId, sessionId, duration = 0) {
-    if (import.meta.env.MODE === 'production') {
-      const response = await api.post(`/artifacts/${artifactId}/track_visit/`, {
-        session_id: sessionId,
-        duration_seconds: duration,
-      })
-      return response.data
-    }
-    return null
+    const response = await api.post(`/artifacts/${artifactId}/track_visit/`, {
+      session_id: sessionId,
+      duration_seconds: duration,
+    })
+    return response.data
   },
 
-  // --- Statistiques ---
+  // Statistics
   async getStats() {
     const response = await api.get('/stats/dashboard/')
     return response.data
